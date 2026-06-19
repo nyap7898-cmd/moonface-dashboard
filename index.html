@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MFA Dashboard">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔊</text></svg>">
+<title>Moon Face Audio — Operations Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F6F8;
+  --card: #FFFFFF;
+  --border: #E4E6EB;
+  --text: #1A1D21;
+  --text-secondary: #6B7280;
+  --green: #059669;
+  --green-bg: #ECFDF5;
+  --red: #DC2626;
+  --red-bg: #FEF2F2;
+  --amber: #D97706;
+  --amber-bg: #FFFBEB;
+  --blue: #2563EB;
+  --blue-bg: #EFF6FF;
+  --radius: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.mono { font-family: 'DM Mono', monospace; }
+
+/* Header */
+.header {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-left h1 { font-size: 20px; font-weight: 700; }
+.header-left span { font-size: 13px; color: var(--text-secondary); }
+
+.last-updated {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-dot {
+  width: 8px; height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* Main content */
+.content { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Grid */
+.grid { display: grid; gap: 20px; }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.card-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.card-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Progress bar */
+.progress-section { margin-bottom: 24px; }
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.progress-header h3 { font-size: 16px; font-weight: 600; }
+
+.progress-bar-bg {
+  height: 12px;
+  background: #E5E7EB;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.6s ease;
+}
+
+.progress-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Tables */
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border);
+}
+
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+tr:last-child td { border-bottom: none; }
+
+/* Status pills */
+.pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.pill-active { background: var(--green-bg); color: var(--green); }
+.pill-pending { background: var(--amber-bg); color: var(--amber); }
+.pill-inactive { background: var(--red-bg); color: var(--red); }
+
+/* Alerts */
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alert-red { background: var(--red-bg); color: var(--red); }
+.alert-amber { background: var(--amber-bg); color: var(--amber); }
+.alert-blue { background: var(--blue-bg); color: var(--blue); }
+
+.alert-icon { font-size: 16px; flex-shrink: 0; }
+
+/* Salesman comparison cards (company tab) */
+.salesman-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.salesman-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* AR aging */
+.aging-bar {
+  display: flex;
+  height: 28px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.aging-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: white;
+  min-width: 40px;
+}
+
+.aging-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.aging-legend span { display: flex; align-items: center; gap: 4px; }
+.aging-dot {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+/* Bar chart */
+.bar-chart { display: flex; align-items: flex-end; gap: 12px; height: 160px; padding-top: 10px; }
+
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar {
+  width: 100%;
+  max-width: 48px;
+  background: var(--blue);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.6s ease;
+  min-height: 2px;
+}
+
+.bar-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60px;
+}
+
+.bar-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.loading-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error */
+.error-msg {
+  background: var(--red-bg);
+  color: var(--red);
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid-3, .grid-4, .grid-2 { grid-template-columns: 1fr; }
+  .content { padding: 12px; }
+  .header { padding: 10px 16px; }
+  .header-left h1 { font-size: 16px; }
+  .header-left span { display: none; }
+  .tabs { padding: 0 8px; gap: 0; }
+  .tab { padding: 12px 16px; font-size: 14px; min-height: 48px; flex: 1; justify-content: center; }
+  .card { padding: 16px; }
+  .card-value { font-size: 22px; }
+  .card-title { font-size: 12px; }
+  .progress-header h3 { font-size: 14px; }
+  table { font-size: 13px; }
+  th, td { padding: 8px 6px; }
+  .aging-segment { font-size: 10px; min-width: 30px; }
+  .aging-legend { flex-wrap: wrap; gap: 8px; }
+  .bar-chart { height: 120px; gap: 6px; }
+  .bar-label { font-size: 10px; max-width: 50px; }
+  .alert { font-size: 12px; padding: 10px 12px; }
+  .salesman-card h3 { font-size: 15px; }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .header-left h1 { font-size: 15px; }
+  .last-updated span { font-size: 11px; }
+  .card-value { font-size: 20px; }
+  .progress-header h3 { font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>🔊 Moon Face Audio</h1>
+    <span>Operations Dashboard</span>
+  </div>
+  <div class="last-updated">
+    <div class="live-dot"></div>
+    <span id="lastUpdated">Loading...</span>
+  </div>
+</div>
+
+<div class="tabs" id="tabBar">
+  <div class="tab active" data-tab="company">🏢 Company</div>
+  <div class="tab" data-tab="norman">👤 Norman</div>
+  <div class="tab" data-tab="ming">👤 Ming</div>
+  <div class="tab" data-tab="lui">👤 Lui</div>
+</div>
+
+<div class="content">
+  <div id="loadingState" class="loading">
+    <div class="loading-spinner"></div>
+    <div>Connecting to Google Sheets...</div>
+  </div>
+
+  <div id="errorState" class="error-msg" style="display:none;"></div>
+
+  <div id="dashboardContent" style="display:none;">
+
+    <!-- COMPANY TAB -->
+    <div class="tab-panel active" id="panel-company">
+      <div class="progress-section">
+        <div class="progress-header">
+          <h3>Company Target — RM 210,000</h3>
+          <span class="mono" id="companyTargetPct">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="companyProgressBar" style="width:0%;background:var(--blue);"></div>
+        </div>
+        <div class="progress-meta">
+          <span class="mono" id="companyActual">RM 0</span>
+          <span id="companyDaysLeft">— days remaining</span>
+        </div>
+      </div>
+
+      <div class="grid grid-3" id="companySalesmenCards"></div>
+
+      <div style="margin-top:24px;" class="grid grid-2">
+        <div class="card">
+          <div class="card-title">Sales by Product Category</div>
+          <div class="bar-chart" id="categoryChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">AR Breakdown by Salesman</div>
+          <div id="companyARBreakdown"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;" class="card">
+        <div class="card-title">Stock Levels</div>
+        <div class="table-wrap">
+          <table id="stockTable">
+            <thead><tr><th>Product</th><th>Qty On Hand</th><th>Min Level</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;" class="card">
+        <div class="card-title">Alerts</div>
+        <div id="companyAlerts"></div>
+      </div>
+    </div>
+
+    <!-- SALESMAN TABS (generated dynamically) -->
+    <div class="tab-panel" id="panel-norman"></div>
+    <div class="tab-panel" id="panel-ming"></div>
+    <div class="tab-panel" id="panel-lui"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — Update these values
+// ============================================================
+const CONFIG = {
+  SHEET_ID: '1PUwPrT1kRm67ELf-yMBoqDg32hrsdtMymujSq5mX4HY',
+  REFRESH_INTERVAL: 5 * 60 * 1000, // 5 minutes
+  SALESMEN: {
+    Norman: { target: 100000, color: '#2563EB' },
+    Ming:   { target: 60000,  color: '#7C3AED' },
+    Lui:    { target: 50000,  color: '#059669' },
+  },
+  COMPANY_TARGET: 210000,
+  TABS: {
+    SALES_LOG: 'Sales Log',
+    DEALER_LIST: 'Dealer List',
+    STOCK: 'Stock',
+    AR_PAYMENTS: 'AR & Payments',
+    TARGETS: 'Targets',
+  }
+};
+
+// ============================================================
+// GOOGLE SHEETS API
+// ============================================================
+async function fetchSheet(tabName) {
+  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch ${tabName}: ${res.status}. Make sure the Sheet is shared as "Anyone with the link can view".`);
+  const csv = await res.text();
+  return parseCSV(csv);
+}
+
+function parseCSV(csv) {
+  const rows = [];
+  let current = '';
+  let inQuotes = false;
+  const lines = [];
+
+  for (let i = 0; i < csv.length; i++) {
+    const ch = csv[i];
+    if (ch === '"') {
+      if (inQuotes && csv[i + 1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      rows.push(current); current = '';
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (current || rows.length > 0) { rows.push(current); lines.push(rows.splice(0)); current = ''; }
+      if (ch === '\r' && csv[i + 1] === '\n') i++;
+    } else {
+      current += ch;
+    }
+  }
+  if (current || rows.length > 0) { rows.push(current); lines.push(rows.splice(0)); }
+
+  if (lines.length < 2) return [];
+  const headers = lines[0].map(h => h.trim());
+  return lines.slice(1).filter(r => r.some(c => c.trim())).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (row[i] || '').trim());
+    return obj;
+  });
+}
+
+async function fetchAllData() {
+  const [salesLog, dealerList, stock, arPayments] = await Promise.all([
+    fetchSheet(CONFIG.TABS.SALES_LOG),
+    fetchSheet(CONFIG.TABS.DEALER_LIST),
+    fetchSheet(CONFIG.TABS.STOCK),
+    fetchSheet(CONFIG.TABS.AR_PAYMENTS),
+  ]);
+  return { salesLog, dealerList, stock, arPayments };
+}
+
+// ============================================================
+// DATA PROCESSING
+// ============================================================
+function parseRM(val) {
+  if (!val) return 0;
+  return parseFloat(String(val).replace(/[^0-9.\-]/g, '')) || 0;
+}
+
+function parseQty(val) {
+  return parseInt(String(val).replace(/[^0-9\-]/g, ''), 10) || 0;
+}
+
+function getCurrentMonth() {
+  const now = new Date();
+  return { month: now.getMonth(), year: now.getFullYear() };
+}
+
+function isCurrentMonth(dateStr) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return false;
+  const cur = getCurrentMonth();
+  return d.getMonth() === cur.month && d.getFullYear() === cur.year;
+}
+
+function daysRemainingInMonth() {
+  const now = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return lastDay - now.getDate();
+}
+
+function daysSince(dateStr) {
+  if (!dateStr) return 999;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return 999;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return -999;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return -999;
+  return Math.floor((d.getTime() - Date.now()) / 86400000);
+}
+
+function formatRM(val) {
+  return 'RM ' + Number(val).toLocaleString('en-MY', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function getSalesmanSales(salesLog, name) {
+  return salesLog.filter(r =>
+    (r['Salesman'] || '').toLowerCase() === name.toLowerCase() && isCurrentMonth(r['Date'])
+  );
+}
+
+function getSalesmanDealers(dealerList, name) {
+  return dealerList.filter(r =>
+    (r['Salesman'] || '').toLowerCase() === name.toLowerCase()
+  );
+}
+
+function getSalesmanAR(arPayments, name) {
+  return arPayments.filter(r =>
+    (r['Salesman'] || '').toLowerCase() === name.toLowerCase() &&
+    !(r['Paid Date'] || '').trim()
+  );
+}
+
+function categorySales(salesLog) {
+  const cats = {};
+  salesLog.filter(r => isCurrentMonth(r['Date'])).forEach(r => {
+    const cat = r['Category'] || r['Product Category'] || r['Product'] || 'Other';
+    cats[cat] = (cats[cat] || 0) + parseRM(r['Total'] || r['Amount'] || r['RM']);
+  });
+  return cats;
+}
+
+function arAging(arRows) {
+  const buckets = { current: 0, mid: 0, overdue: 0 };
+  arRows.forEach(r => {
+    const due = r['Due Date'];
+    const amt = parseRM(r['Amount'] || r['Outstanding'] || r['Total'] || r['RM']);
+    const overdueDays = -daysUntil(due);
+    if (overdueDays > 30) buckets.overdue += amt;
+    else if (overdueDays > 15) buckets.mid += amt;
+    else buckets.current += amt;
+  });
+  return buckets;
+}
+
+// ============================================================
+// ALERTS
+// ============================================================
+function generateAlerts(data) {
+  const alerts = [];
+  const now = new Date();
+  const dayOfMonth = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const midMonth = Math.floor(daysInMonth / 2);
+
+  // AR overdue 30+ days
+  data.arPayments.filter(r => !(r['Paid Date'] || '').trim()).forEach(r => {
+    const overdue = -daysUntil(r['Due Date']);
+    const amt = parseRM(r['Amount'] || r['Outstanding'] || r['Total'] || r['RM']);
+    if (overdue > 30) {
+      alerts.push({ type: 'red', text: `AR overdue ${overdue}d — ${r['Dealer'] || r['Customer'] || 'Unknown'}: ${formatRM(amt)}` });
+    } else if (overdue > 0 && overdue <= 7) {
+      alerts.push({ type: 'amber', text: `AR due within 7 days — ${r['Dealer'] || r['Customer'] || 'Unknown'}: ${formatRM(amt)}` });
+    } else if (overdue >= -7 && overdue < 0) {
+      alerts.push({ type: 'blue', text: `Payment due in ${-overdue}d — ${r['Dealer'] || r['Customer'] || 'Unknown'}: ${formatRM(amt)}` });
+    }
+  });
+
+  // Stock alerts
+  data.stock.forEach(r => {
+    const qty = parseQty(r['Qty'] || r['Qty On Hand'] || r['Quantity']);
+    const min = parseQty(r['Min Level'] || r['Min'] || r['Minimum']);
+    if (min > 0) {
+      if (qty < min) {
+        alerts.push({ type: 'red', text: `Stock below minimum — ${r['Product'] || r['Name']}: ${qty} (min: ${min})` });
+      } else if (qty < min * 1.5) {
+        alerts.push({ type: 'amber', text: `Stock low — ${r['Product'] || r['Name']}: ${qty} (min: ${min})` });
+      }
+    }
+  });
+
+  // Salesman target alerts (after mid-month)
+  if (dayOfMonth >= midMonth) {
+    Object.entries(CONFIG.SALESMEN).forEach(([name, cfg]) => {
+      const sales = getSalesmanSales(data.salesLog, name);
+      const total = sales.reduce((s, r) => s + parseRM(r['Total'] || r['Amount'] || r['RM']), 0);
+      const pct = cfg.target > 0 ? (total / cfg.target) * 100 : 0;
+      if (pct < 40) {
+        alerts.push({ type: 'red', text: `${name} below 40% of target (${pct.toFixed(0)}%) — mid-month check` });
+      }
+    });
+  }
+
+  // Inactive dealers
+  data.dealerList.forEach(r => {
+    const status = (r['Status'] || '').toLowerCase();
+    if (status === 'inactive') {
+      alerts.push({ type: 'amber', text: `Dealer inactive — ${r['Dealer'] || r['Name'] || 'Unknown'} (${r['Salesman'] || ''})` });
+    }
+  });
+
+  return alerts;
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+function renderProgressBar(containerId, actual, target, label, color) {
+  const pct = target > 0 ? Math.min((actual / target) * 100, 100) : 0;
+  const barColor = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : color || 'var(--blue)';
+
+  return `
+    <div class="progress-section">
+      <div class="progress-header">
+        <h3>${label} — ${formatRM(target)}</h3>
+        <span class="mono">${pct.toFixed(1)}%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width:${pct}%;background:${barColor};"></div>
+      </div>
+      <div class="progress-meta">
+        <span class="mono">${formatRM(actual)}</span>
+        <span>${daysRemainingInMonth()} days remaining</span>
+      </div>
+    </div>`;
+}
+
+function renderKPICards(salesRM, unitsSold, arOutstanding) {
+  return `
+    <div class="grid grid-3" style="margin-bottom:24px;">
+      <div class="card">
+        <div class="card-title">My Sales (RM)</div>
+        <div class="card-value mono">${formatRM(salesRM)}</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Units Sold</div>
+        <div class="card-value mono">${unitsSold.toLocaleString()}</div>
+      </div>
+      <div class="card">
+        <div class="card-title">AR Outstanding</div>
+        <div class="card-value mono" style="color:${arOutstanding > 0 ? 'var(--red)' : 'var(--green)'}">${formatRM(arOutstanding)}</div>
+      </div>
+    </div>`;
+}
+
+function renderDealerTable(dealers, salesLog) {
+  const rows = dealers.map(d => {
+    const dName = d['Dealer'] || d['Name'] || '';
+    const orders = salesLog.filter(r =>
+      isCurrentMonth(r['Date']) &&
+      (r['Dealer'] || r['Customer'] || '').toLowerCase() === dName.toLowerCase()
+    );
+    const orderCount = orders.length;
+    const dealerAR = parseRM(d['AR'] || d['Outstanding'] || '0');
+    const status = (d['Status'] || 'Active').toLowerCase();
+    const pillClass = status === 'active' ? 'pill-active' : status === 'pending' ? 'pill-pending' : 'pill-inactive';
+
+    return `<tr>
+      <td><strong>${dName}</strong></td>
+      <td>${d['Region'] || d['State'] || '—'}</td>
+      <td><span class="pill ${pillClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
+      <td class="mono">${orderCount}</td>
+      <td class="mono">${dealerAR > 0 ? formatRM(dealerAR) : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-title">Dealers</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Dealer</th><th>Region</th><th>Status</th><th>Orders (Month)</th><th>AR</th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);">No dealers</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function renderARPanel(arRows) {
+  const aging = arAging(arRows);
+  const total = aging.current + aging.mid + aging.overdue;
+  if (total === 0) {
+    return `<div class="card"><div class="card-title">Outstanding Payments</div><p style="color:var(--text-secondary);font-size:14px;">No outstanding payments 🎉</p></div>`;
+  }
+
+  const pctCurrent = (aging.current / total * 100).toFixed(0);
+  const pctMid = (aging.mid / total * 100).toFixed(0);
+  const pctOverdue = (aging.overdue / total * 100).toFixed(0);
+
+  return `
+    <div class="card">
+      <div class="card-title">Outstanding Payments — ${formatRM(total)}</div>
+      <div class="aging-bar">
+        ${aging.current > 0 ? `<div class="aging-segment" style="width:${pctCurrent}%;background:var(--green);">${formatRM(aging.current)}</div>` : ''}
+        ${aging.mid > 0 ? `<div class="aging-segment" style="width:${pctMid}%;background:var(--amber);">${formatRM(aging.mid)}</div>` : ''}
+        ${aging.overdue > 0 ? `<div class="aging-segment" style="width:${pctOverdue}%;background:var(--red);">${formatRM(aging.overdue)}</div>` : ''}
+      </div>
+      <div class="aging-legend">
+        <span><span class="aging-dot" style="background:var(--green);"></span> &lt;15 days</span>
+        <span><span class="aging-dot" style="background:var(--amber);"></span> 15–30 days</span>
+        <span><span class="aging-dot" style="background:var(--red);"></span> 30+ days</span>
+      </div>
+    </div>`;
+}
+
+function renderAlerts(alerts, filter) {
+  const filtered = filter ? alerts.filter(a => a.text.toLowerCase().includes(filter.toLowerCase())) : alerts;
+  if (filtered.length === 0) {
+    return '<p style="color:var(--text-secondary);font-size:14px;">No alerts 👍</p>';
+  }
+  return filtered.map(a => {
+    const icon = a.type === 'red' ? '🔴' : a.type === 'amber' ? '🟡' : '🔵';
+    return `<div class="alert alert-${a.type}"><span class="alert-icon">${icon}</span>${a.text}</div>`;
+  }).join('');
+}
+
+function renderCategoryChart(cats) {
+  const entries = Object.entries(cats).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  if (entries.length === 0) return '<p style="color:var(--text-secondary);font-size:14px;">No sales data this month</p>';
+  const max = Math.max(...entries.map(e => e[1]));
+  return entries.map(([cat, val]) => {
+    const h = max > 0 ? Math.max((val / max) * 130, 4) : 4;
+    return `<div class="bar-col">
+      <span class="bar-value">${formatRM(val)}</span>
+      <div class="bar" style="height:${h}px;"></div>
+      <span class="bar-label" title="${cat}">${cat}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderSalesmanTab(name, data) {
+  const cfg = CONFIG.SALESMEN[name];
+  const sales = getSalesmanSales(data.salesLog, name);
+  const totalRM = sales.reduce((s, r) => s + parseRM(r['Total'] || r['Amount'] || r['RM']), 0);
+  const totalUnits = sales.reduce((s, r) => s + parseQty(r['Qty'] || r['Quantity'] || r['Units'] || '1'), 0);
+  const dealers = getSalesmanDealers(data.dealerList, name);
+  const arRows = getSalesmanAR(data.arPayments, name);
+  const arTotal = arRows.reduce((s, r) => s + parseRM(r['Amount'] || r['Outstanding'] || r['Total'] || r['RM']), 0);
+
+  const panel = document.getElementById(`panel-${name.toLowerCase()}`);
+  panel.innerHTML = `
+    ${renderProgressBar(null, totalRM, cfg.target, `${name}'s Target`, cfg.color)}
+    ${renderKPICards(totalRM, totalUnits, arTotal)}
+    ${renderDealerTable(dealers, data.salesLog)}
+    ${renderARPanel(arRows)}
+    <div class="card" style="margin-top:24px;">
+      <div class="card-title">Alerts</div>
+      ${renderAlerts(data.alerts, name)}
+    </div>
+  `;
+}
+
+function renderCompanyTab(data) {
+  // Company progress
+  const allSalesThisMonth = data.salesLog.filter(r => isCurrentMonth(r['Date']));
+  const totalRM = allSalesThisMonth.reduce((s, r) => s + parseRM(r['Total'] || r['Amount'] || r['RM']), 0);
+
+  document.getElementById('companyTargetPct').textContent = (CONFIG.COMPANY_TARGET > 0 ? (totalRM / CONFIG.COMPANY_TARGET * 100).toFixed(1) : 0) + '%';
+  document.getElementById('companyActual').textContent = formatRM(totalRM);
+  document.getElementById('companyDaysLeft').textContent = `${daysRemainingInMonth()} days remaining`;
+
+  const pct = CONFIG.COMPANY_TARGET > 0 ? Math.min((totalRM / CONFIG.COMPANY_TARGET) * 100, 100) : 0;
+  const barColor = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--blue)';
+  document.getElementById('companyProgressBar').style.width = pct + '%';
+  document.getElementById('companyProgressBar').style.background = barColor;
+
+  // Salesman comparison cards
+  const cardsHtml = Object.entries(CONFIG.SALESMEN).map(([name, cfg]) => {
+    const sales = getSalesmanSales(data.salesLog, name);
+    const rm = sales.reduce((s, r) => s + parseRM(r['Total'] || r['Amount'] || r['RM']), 0);
+    const p = cfg.target > 0 ? (rm / cfg.target * 100).toFixed(1) : 0;
+    const arRows = getSalesmanAR(data.arPayments, name);
+    const ar = arRows.reduce((s, r) => s + parseRM(r['Amount'] || r['Outstanding'] || r['Total'] || r['RM']), 0);
+    const dealers = getSalesmanDealers(data.dealerList, name);
+
+    return `<div class="salesman-card">
+      <h3>${name}</h3>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+          <span>Target: ${formatRM(cfg.target)}</span>
+          <span class="mono" style="font-weight:600;">${p}%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width:${Math.min(p, 100)}%;background:${cfg.color};"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+        <div><span style="color:var(--text-secondary);">Sales</span><br><strong class="mono">${formatRM(rm)}</strong></div>
+        <div><span style="color:var(--text-secondary);">AR</span><br><strong class="mono" style="color:${ar > 0 ? 'var(--red)' : 'var(--green)'}">${formatRM(ar)}</strong></div>
+        <div><span style="color:var(--text-secondary);">Dealers</span><br><strong class="mono">${dealers.length}</strong></div>
+        <div><span style="color:var(--text-secondary);">Orders</span><br><strong class="mono">${sales.length}</strong></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('companySalesmenCards').innerHTML = cardsHtml;
+
+  // Category chart
+  document.getElementById('categoryChart').innerHTML = renderCategoryChart(categorySales(data.salesLog));
+
+  // AR breakdown
+  const arBreakdownHtml = Object.entries(CONFIG.SALESMEN).map(([name, cfg]) => {
+    const arRows = getSalesmanAR(data.arPayments, name);
+    const aging = arAging(arRows);
+    const total = aging.current + aging.mid + aging.overdue;
+    return `<div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;">
+        <strong>${name}</strong>
+        <span class="mono" style="color:${total > 0 ? 'var(--red)' : 'var(--green)'};">${formatRM(total)}</span>
+      </div>
+      ${total > 0 ? `<div class="aging-bar">
+        ${aging.current > 0 ? `<div class="aging-segment" style="width:${aging.current/total*100}%;background:var(--green);">${formatRM(aging.current)}</div>` : ''}
+        ${aging.mid > 0 ? `<div class="aging-segment" style="width:${aging.mid/total*100}%;background:var(--amber);">${formatRM(aging.mid)}</div>` : ''}
+        ${aging.overdue > 0 ? `<div class="aging-segment" style="width:${aging.overdue/total*100}%;background:var(--red);">${formatRM(aging.overdue)}</div>` : ''}
+      </div>` : '<div style="font-size:13px;color:var(--text-secondary);">No outstanding AR</div>'}
+    </div>`;
+  }).join('');
+  document.getElementById('companyARBreakdown').innerHTML = arBreakdownHtml;
+
+  // Stock table
+  const stockRows = data.stock.map(r => {
+    const qty = parseQty(r['Qty'] || r['Qty On Hand'] || r['Quantity']);
+    const min = parseQty(r['Min Level'] || r['Min'] || r['Minimum']);
+    let statusHtml = '<span class="pill pill-active">OK</span>';
+    if (min > 0 && qty < min) statusHtml = '<span class="pill pill-inactive">Below Min</span>';
+    else if (min > 0 && qty < min * 1.5) statusHtml = '<span class="pill pill-pending">Low</span>';
+    return `<tr>
+      <td>${r['Product'] || r['Name'] || '—'}</td>
+      <td class="mono">${qty}</td>
+      <td class="mono">${min || '—'}</td>
+      <td>${statusHtml}</td>
+    </tr>`;
+  }).join('');
+  document.querySelector('#stockTable tbody').innerHTML = stockRows || '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">No stock data</td></tr>';
+
+  // Alerts
+  document.getElementById('companyAlerts').innerHTML = renderAlerts(data.alerts);
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+document.getElementById('tabBar').addEventListener('click', e => {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(`panel-${tab.dataset.tab}`).classList.add('active');
+});
+
+// ============================================================
+// MAIN
+// ============================================================
+async function loadDashboard() {
+  try {
+    const data = await fetchAllData();
+    data.alerts = generateAlerts(data);
+
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'none';
+    document.getElementById('dashboardContent').style.display = 'block';
+
+    renderCompanyTab(data);
+    renderSalesmanTab('Norman', data);
+    renderSalesmanTab('Ming', data);
+    renderSalesmanTab('Lui', data);
+
+    document.getElementById('lastUpdated').textContent =
+      'Updated ' + new Date().toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit' });
+
+  } catch (err) {
+    console.error('Dashboard error:', err);
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'block';
+    document.getElementById('errorState').textContent = `Error loading data: ${err.message}. Check Sheet ID and API key.`;
+  }
+}
+
+loadDashboard();
+setInterval(loadDashboard, CONFIG.REFRESH_INTERVAL);
+</script>
+</body>
+</html>

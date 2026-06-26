@@ -558,10 +558,22 @@ function getCurrentMonth() {
   return { month: now.getMonth(), year: now.getFullYear() };
 }
 
+function parseDate(dateStr) {
+  if (!dateStr) return null;
+  const s = dateStr.trim();
+  // DD/MM/YYYY
+  const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dmy) return new Date(parseInt(dmy[3]), parseInt(dmy[2]) - 1, parseInt(dmy[1]));
+  // YYYY-MM-DD
+  const ymd = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (ymd) return new Date(parseInt(ymd[1]), parseInt(ymd[2]) - 1, parseInt(ymd[3]));
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
 function isCurrentMonth(dateStr) {
-  if (!dateStr) return false;
-  const d = new Date(dateStr);
-  if (isNaN(d)) return false;
+  const d = parseDate(dateStr);
+  if (!d) return false;
   const cur = getCurrentMonth();
   return d.getMonth() === cur.month && d.getFullYear() === cur.year;
 }
@@ -573,16 +585,14 @@ function daysRemainingInMonth() {
 }
 
 function daysSince(dateStr) {
-  if (!dateStr) return 999;
-  const d = new Date(dateStr);
-  if (isNaN(d)) return 999;
+  const d = parseDate(dateStr);
+  if (!d) return 999;
   return Math.floor((Date.now() - d.getTime()) / 86400000);
 }
 
 function daysUntil(dateStr) {
-  if (!dateStr) return -999;
-  const d = new Date(dateStr);
-  if (isNaN(d)) return -999;
+  const d = parseDate(dateStr);
+  if (!d) return -999;
   return Math.floor((d.getTime() - Date.now()) / 86400000);
 }
 
@@ -590,21 +600,23 @@ function formatRM(val) {
   return 'RM ' + Number(val).toLocaleString('en-MY', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
+function normalizeName(n) { return (n || '').trim().toLowerCase().replace(/[0-9]/g, ''); }
+
 function getSalesmanSales(salesLog, name) {
   return salesLog.filter(r =>
-    (r['Salesman'] || '').toLowerCase() === name.toLowerCase() && isCurrentMonth(r['Date'])
+    normalizeName(r['Salesman']) === normalizeName(name) && isCurrentMonth(r['Date'])
   );
 }
 
 function getSalesmanDealers(dealerList, name) {
   return dealerList.filter(r =>
-    (r['Salesman'] || '').toLowerCase() === name.toLowerCase()
+    normalizeName(r['Salesman']) === normalizeName(name)
   );
 }
 
 function getSalesmanAR(arPayments, name) {
   return arPayments.filter(r =>
-    (r['Salesman'] || '').toLowerCase() === name.toLowerCase() &&
+    normalizeName(r['Salesman']) === normalizeName(name) &&
     !(r['Paid Date'] || '').trim()
   );
 }

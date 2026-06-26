@@ -538,6 +538,32 @@ async function fetchAllData() {
     fetchSheet(CONFIG.TABS.STOCK),
     fetchSheet(CONFIG.TABS.AR_PAYMENTS),
   ]);
+
+  // Enrich sales with salesman from dealer list if missing
+  const dealerToSalesman = {};
+  dealerList.forEach(d => {
+    const name = (d['Dealer'] || d['Name'] || '').trim().toUpperCase();
+    const sm = (d['Salesman'] || '').trim();
+    if (name && sm) dealerToSalesman[name] = sm;
+  });
+  salesLog.forEach(s => {
+    if (!s['Salesman'] || !s['Salesman'].trim()) {
+      const dealer = (s['Dealer'] || s['Customer'] || '').trim().toUpperCase();
+      // Try exact match first, then partial match
+      if (dealerToSalesman[dealer]) {
+        s['Salesman'] = dealerToSalesman[dealer];
+      } else {
+        // Fuzzy: check if any dealer name contains or is contained by this name
+        for (const [dName, sm] of Object.entries(dealerToSalesman)) {
+          if (dealer.includes(dName) || dName.includes(dealer)) {
+            s['Salesman'] = sm;
+            break;
+          }
+        }
+      }
+    }
+  });
+
   return { salesLog, dealerList, stock, arPayments };
 }
 
